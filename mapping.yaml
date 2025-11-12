@@ -1,0 +1,49 @@
+классы:
+  - ЯчейкаРоботФермер: FarmCell
+    свойства:
+      - ячейка_робота : has_robot
+      - тип_ячейки: cell_type
+
+  - ЛабиринтРоботФермер: FarmLabyrinth
+    свойства:
+      - длина: width
+      - высота: height
+      - ячейки: cells
+    методы:
+      - ПолучитьСоседнююЯчейку: get_neighbor
+      - ПолучитьИтератор: get_iterator
+      - ИнициализироватьЛабиринт: initialize
+
+  - Класс диаграммы: ВашКлассВПитоне
+    свойства:
+      - лабиринт: labyrinth
+    методы:
+      - ЕхатьПоРяду: move_next_row
+      - ОтойтиРяд: move_previous_row
+      - СместитьсяВлево: move_left
+      - СместитьсяВправо: move_right
+      - Подняться: move_up
+      - Спуститься: move_down
+      - Грядка: action_garden
+      - Почва: action_soil
+
+
+перечисления:
+  - ТипЯчеекФермы: FarmCellType
+    опции:
+      - Грядка: Garden
+      - Почва: Soil
+      - Урожай: Harvest
+      - Теплица: Greenhouse
+      - Вода: Water
+      - Барьер: Barrier
+      - Финиш: Finish
+
+  - ТипНаправленийФермерНапр: DirectionType
+    опции:
+      - РядВлево: RowDown      
+      - РядВправо: RowUp 
+      - РядНазад: RowLeft
+      - РядВперёд: RowRight
+      - ДиагФВ: DiagonalUpLeft 
+      - ДиагФН: DiagonalDownRight
