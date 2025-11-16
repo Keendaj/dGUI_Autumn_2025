@@ -5,12 +5,12 @@ import zlib
 import base64
 
 class DirectionType(Enum):
-    RowDown = "Ю"          # вниз (y - 1)
-    RowUp = "С"            # вверх (y + 1)
-    RowLeft = "З"          # влево (x - 1)
-    RowRight = "В"         # вправо (x + 1)
-    DiagonalUpLeft = "СЗ"  # x - 1, y + 1
-    DiagonalDownRight = "ЮВ" # x + 1, y - 1
+    RowDown = "Ю"
+    RowUp = "С"
+    RowLeft = "З"
+    RowRight = "В"
+    DiagonalUpLeft = "СЗ"
+    DiagonalDownRight = "ЮВ"
 
 
 class FarmCellType(Enum):
