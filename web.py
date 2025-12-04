@@ -14,7 +14,7 @@ app = Flask(__name__)
 lab = FarmLabyrinth(width=10, height=10)
 lab.initialize(FarmCellType.Greenhouse)
 robot = RobotFarmer(lab)
-robot.place(0, lab.height - 1)
+robot.place(0, 0)
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), 'assets')
 
@@ -96,10 +96,10 @@ def api_execute():
                 result = robot.move_left()
                 msg = 'robot crashed'
             elif cmd == 'Вверх':
-                result = robot.move_previous_row()
+                result = robot.move_next_row()
                 msg = 'robot crashed'
             elif cmd == 'Вниз':
-                result = robot.move_next_row()
+                result = robot.move_previous_row()
                 msg = 'robot crashed'
             elif cmd == 'ВлевоВверх':
                 result = robot.move_up()
@@ -124,8 +124,6 @@ def api_execute():
             return jsonify({'error': str(e)}), 500
 
         if result is None:
-            # Action had no effect (invalid move/action) — record current
-            # state as a frame and continue executing remaining commands.
             frames.append(serialize_state(lab, robot))
             continue
 
@@ -196,7 +194,7 @@ HTML = '''<!DOCTYPE html>
 body { font-family: Arial; margin: 10px; }
 #app { display: flex; gap: 15px; }
 #left { width: 280px; }
-textarea { width: 100%; height: 200px; }
+textarea { width: 100%; height: 200px; resize: none; }
 canvas { border: 1px solid #333; }
 button { padding: 8px 12px; margin: 3px; }
 .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
@@ -297,7 +295,10 @@ function drawState(st) {
   ctx.clearRect(0, 0, board.width, board.height);
   for(let y=0; y<st.height; y++) {
     for(let x=0; x<st.width; x++) {
-      const c = st.cells[y][x];
+            // st.cells is provided in external (user) Y order where 0 is bottom.
+            // Canvas Y=0 is top, so map visual Y->data Y by inverting.
+            const dataY = st.height - 1 - y;
+            const c = st.cells[dataY][x];
       const img = assets[c.cell_type];
       if(assetsLoaded && img && img.complete) {
         ctx.drawImage(img, x*CELL, y*CELL, CELL, CELL);
@@ -329,13 +330,30 @@ function setupDOM() {
     board.addEventListener('click', function(e) {
         const r = board.getBoundingClientRect();
         const x = Math.floor((e.clientX - r.left) / CELL);
-        const y = Math.floor((e.clientY - r.top) / CELL);
+        const visualY = Math.floor((e.clientY - r.top) / CELL);
+        const y = state ? (state.height - 1 - visualY) : visualY;
         const url = e.shiftKey ? '/api/place' : '/api/toggle_cell';
         fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({x:x,y:y})}).then(function(){ loadState(); });
     });
 
-    document.getElementById('copy').onclick = function() { document.getElementById('commands').select(); document.execCommand('copy'); };
-    document.getElementById('paste').onclick = async function() { const t = await navigator.clipboard.readText(); document.getElementById('commands').value = t; };
+    document.getElementById('copy').onclick = async function() { 
+        const textarea = document.getElementById('commands');
+        textarea.focus();
+        textarea.select();
+        try {
+            await navigator.clipboard.writeText(textarea.value);
+        } catch (err) {
+            console.error('Copy failed:', err);
+        }
+    };
+    document.getElementById('paste').onclick = async function() { 
+        try {
+            const t = await navigator.clipboard.readText();
+            document.getElementById('commands').value = t;
+        } catch (err) {
+            console.error('Paste failed:', err);
+        }
+    };
     document.getElementById('export').onclick = async function() { const r = await fetch('/api/export'); const j = await r.json(); if(j.code) prompt('Код уровня:', j.code); };
     document.getElementById('import').onclick = async function() { const c = prompt('Вставьте код уровня:'); if(c) { const r = await fetch('/api/import', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:c})}); const j = await r.json(); if(j.state) { state = j.state; drawState(state); } } };
     document.getElementById('run').onclick = async function() {

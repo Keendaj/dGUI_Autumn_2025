@@ -97,17 +97,19 @@ class FarmGUI:
         self.move_robot_label.config(text="Нажмите на клетку, куда хотите переместить робота")
 
 
-    def copy_event(event):
+    def copy_event(self, event=None):
         try:
-            event.widget.event_generate("<<Copy>>")
-        except:
+            widget = event.widget if event is not None else self.command_box
+            widget.event_generate("<<Copy>>")
+        except Exception:
             pass
         return "break"
 
-    def paste_event(event):
+    def paste_event(self, event=None):
         try:
-            event.widget.event_generate("<<Paste>>")
-        except:
+            widget = event.widget if event is not None else self.command_box
+            widget.event_generate("<<Paste>>")
+        except Exception:
             pass
         return "break"
     
@@ -363,9 +365,9 @@ class FarmGUI:
             result = self.robot.move_up()
         elif cmd == "ВправоВниз":
             result = self.robot.move_down()
-        elif cmd == "Грядка":
-            result = self.robot.action_garden()
         elif cmd == "Посадка":
+            result = self.robot.action_garden()
+        elif cmd == "Грядка":
             result = self.robot.action_soil()
         else:
             messagebox.showerror("Ошибка", f"Неизвестная команда: {cmd}")
